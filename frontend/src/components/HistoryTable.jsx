@@ -5,6 +5,40 @@ import { getExportUrl } from '../services/api';
 export default function HistoryTable({ history }) {
   if (!history || history.length === 0) return null;
 
+  // Fungsi helper untuk memformat tanggal ke zona waktu lokal pengguna
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+
+    try {
+      // Jika string waktu tidak memiliki akhiran 'Z' (UTC) dan tidak ada offset jam,
+      // kita tambahkan 'Z' agar JavaScript membacanya sebagai UTC dan mengonversinya ke WIB (+7)
+      let formattedInput = dateString;
+      if (typeof dateString === 'string' && !dateString.endsWith('Z') && !dateString.includes('+')) {
+        formattedInput = dateString.replace(' ', 'T') + 'Z';
+      }
+
+      const date = new Date(formattedInput);
+
+      // Jika parsing Date gagal/invalid, kembalikan string aslinya
+      if (isNaN(date.getTime())) {
+        return dateString;
+      }
+
+      // Format ke tanggal & waktu lokal Indonesia (24 jam)
+      return date.toLocaleString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    } catch (err) {
+      return dateString;
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
       <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center space-x-2">
@@ -28,12 +62,20 @@ export default function HistoryTable({ history }) {
             {history.map((row) => (
               <tr key={row.id} className="hover:bg-slate-50 transition-colors">
                 <td className="py-3 px-4 text-xs text-slate-600 font-mono">
-                  {new Date(row.created_at).toLocaleString('id-ID')}
+                  {formatDate(row.created_at)}
                 </td>
-                <td className="py-3 px-4 text-xs text-slate-800 font-medium">{row.source_type}</td>
-                <td className="py-3 px-4 text-xs font-semibold">{row.total_urls}</td>
-                <td className="py-3 px-4 text-xs font-semibold text-red-600">{row.phishing_count}</td>
-                <td className="py-3 px-4 text-xs font-semibold text-emerald-600">{row.legitimate_count}</td>
+                <td className="py-3 px-4 text-xs text-slate-800 font-medium">
+                  {row.source_type}
+                </td>
+                <td className="py-3 px-4 text-xs font-semibold">
+                  {row.total_urls}
+                </td>
+                <td className="py-3 px-4 text-xs font-semibold text-red-600">
+                  {row.phishing_count}
+                </td>
+                <td className="py-3 px-4 text-xs font-semibold text-emerald-600">
+                  {row.legitimate_count}
+                </td>
                 <td className="py-3 px-4 text-center">
                   <a
                     href={getExportUrl(row.id)}
