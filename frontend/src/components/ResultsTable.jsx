@@ -1,38 +1,30 @@
 import React from 'react';
-import { AlertCircle, CheckCircle, ChevronRight } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, ChevronRight, Info } from 'lucide-react';
 
-export default function ResultsTable({ results, onSelectRow, selectedUrl }) {
+export default function ResultsTable({ results, selectedRow, onSelectRow }) {
   if (!results || results.length === 0) return null;
 
-  const handleRowClick = (row) => {
-    if (onSelectRow) {
-      onSelectRow(row);
-    }
-    
-    // Smooth scroll ke komponen FeatureExplanation
-    setTimeout(() => {
-      const explanationElement = document.getElementById('feature-explanation-section');
-      if (explanationElement) {
-        explanationElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 50);
-  };
-
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-      <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+    <div className="bg-[#0f172a] rounded-2xl border border-slate-800/80 shadow-xl overflow-hidden">
+      {/* Header Tabel */}
+      <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-slate-800 text-sm">Hasil Deteksi Phishing</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">Klik pada baris tabel untuk melihat rincian ekstraksi fitur URL</p>
+          <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+            Hasil Deteksi Phishing
+          </h3>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Klik pada baris atau tombol rincian untuk melihat breakdown ekstraksi fitur URL
+          </p>
         </div>
-        <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full border border-indigo-100">
+        <span className="px-2.5 py-1 bg-blue-500/10 text-sky-400 border border-blue-500/20 text-xs font-mono font-semibold rounded-lg">
           {results.length} URL
         </span>
       </div>
 
+      {/* Tabel Data */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-100 text-slate-600 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-200">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-[#0b0f19] text-slate-400 uppercase text-[10px] font-semibold tracking-wider border-b border-slate-800">
             <tr>
               <th className="py-3 px-4">Alamat URL</th>
               <th className="py-3 px-4">Klasifikasi</th>
@@ -41,52 +33,69 @@ export default function ResultsTable({ results, onSelectRow, selectedUrl }) {
               <th className="py-3 px-4 text-center">Rincian</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
-            {results.map((row, idx) => {
+          <tbody className="divide-y divide-slate-800/60">
+            {results.map((row, index) => {
               const isPhishing = row.classification === 'Phishing';
-              const isSelected = selectedUrl?.url === row.url;
+              const isSelected = selectedRow && selectedRow.url === row.url;
 
               return (
                 <tr
-                  key={idx}
-                  onClick={() => handleRowClick(row)}
-                  className={`cursor-pointer transition-all duration-150 ${
+                  key={index}
+                  onClick={() => onSelectRow(row)}
+                  className={`cursor-pointer transition-colors ${
                     isSelected
-                      ? 'bg-indigo-50/90 font-medium border-l-4 border-l-indigo-600'
-                      : 'hover:bg-slate-50'
+                      ? 'bg-blue-600/15 border-l-4 border-blue-500'
+                      : 'hover:bg-slate-800/50'
                   }`}
                 >
-                  <td className="py-3.5 px-4 max-w-xs font-mono text-xs text-slate-800 truncate" title={row.url}>
+                  {/* URL */}
+                  <td className="py-3.5 px-4 font-mono text-slate-200 max-w-xs truncate" title={row.url}>
                     {row.url}
                   </td>
+
+                  {/* Klasifikasi */}
                   <td className="py-3.5 px-4">
-                    <span
-                      className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        isPhishing
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-emerald-100 text-emerald-700'
-                      }`}
-                    >
-                      {isPhishing ? <AlertCircle size={14} /> : <CheckCircle size={14} />}
-                      <span>{row.classification}</span>
+                    {isPhishing ? (
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg font-semibold text-[11px]">
+                        <ShieldAlert size={14} />
+                        <span>Phishing</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg font-semibold text-[11px]">
+                        <ShieldCheck size={14} />
+                        <span>Legitimate</span>
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Skor Risiko */}
+                  <td className="py-3.5 px-4 font-mono font-bold">
+                    <span className={isPhishing ? 'text-red-400' : 'text-emerald-400'}>
+                      {row.risk_score || row.confidence || '0'}%
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 font-bold">
-                    <span className={isPhishing ? 'text-red-600' : 'text-emerald-600'}>
-                      {row.risk_score}%
-                    </span>
+
+                  {/* Probabilitas */}
+                  <td className="py-3.5 px-4 font-mono text-slate-400">
+                    {row.probability ? `${(row.probability * 100).toFixed(2)}%` : '-'}
                   </td>
-                  <td className="py-3.5 px-4 text-slate-600 font-mono text-xs">
-                    {(row.phishing_probability * 100).toFixed(2)}%
-                  </td>
+
+                  {/* Tombol Rincian */}
                   <td className="py-3.5 px-4 text-center">
-                    <span
-                      className={`inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
-                        isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectRow(row);
+                      }}
+                      className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                          : 'bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700'
                       }`}
                     >
-                      <ChevronRight size={16} />
-                    </span>
+                      <span>Lihat Detail</span>
+                      <ChevronRight size={14} />
+                    </button>
                   </td>
                 </tr>
               );
